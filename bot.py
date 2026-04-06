@@ -9,7 +9,8 @@ from aiogram.fsm.state import State, StatesGroup
 from aiogram.fsm.storage.memory import MemoryStorage
 from aiogram.types import Message, ReplyKeyboardMarkup, KeyboardButton, ReplyKeyboardRemove
 
-BOT_TOKEN = "8636727855:AAEIRF7icpCJfQLEllugM9tgnbEaOAPEXp0"
+import os
+BOT_TOKEN = os.getenv("BOT_TOKEN")
 
 
 class Form(StatesGroup):
