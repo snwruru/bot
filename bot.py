@@ -20,8 +20,7 @@ pending_tasks: dict[int, asyncio.Task] = {}
 # ─── HTTP сервер для приёма заявок с сайта ───────────────────────────────────
 
 async def handle_form(request: web.Request) -> web.Response:
-    """Принимает POST от формы на сайте и отправляет заявку в MAX."""
-    # CORS
+    """Принимает POST от формы на сайте и отправляет заявку в MAX напрямую."""
     headers = {
         "Access-Control-Allow-Origin": "*",
         "Access-Control-Allow-Methods": "POST, OPTIONS",
@@ -47,25 +46,33 @@ async def handle_form(request: web.Request) -> web.Response:
     area    = (data.get("area")    or "").strip()
     comment = (data.get("comment") or "").strip()
 
-    lines = [
-        "📋 Новая заявка с сайта БауТехно",
-        "━━━━━━━━━━━━━━━━━━━━",
-    ]
+    from datetime import datetime, timezone, timedelta
+    msk = datetime.now(timezone(timedelta(hours=3)))
+
+    lines = ["📋 Новая заявка с сайта БауТехно", "━━━━━━━━━━━━━━━━━━━━"]
     if name:    lines.append(f"👤 Имя: {name}")
     lines.append(f"📞 Телефон: {phone}")
     if area:    lines.append(f"📐 Площадь: {area}")
     if comment: lines.append(f"💬 Комментарий: {comment}")
     lines.append("━━━━━━━━━━━━━━━━━━━━")
-
-    from datetime import datetime, timezone, timedelta
-    msk = datetime.now(timezone(timedelta(hours=3)))
     lines.append(f"🕐 {msk.strftime('%d.%m.%Y %H:%M')} (МСК)")
-
     text = "\n".join(lines)
 
+    url = f"https://botapi.max.ru/messages?user_id={ADMIN_ID}"
     try:
-        await bot.send_message(user_id=ADMIN_ID, text=text)
-        return web.Response(text='{"ok":true}', status=200, headers=headers)
+        async with aiohttp.ClientSession() as session:
+            async with session.post(
+                url,
+                json={"text": text},
+                headers={"Authorization": f"Bearer {BOT_TOKEN}"},
+                timeout=aiohttp.ClientTimeout(total=10),
+            ) as resp:
+                result = await resp.json()
+        if result.get("message", {}).get("id") or result.get("id"):
+            return web.Response(text='{"ok":true}', status=200, headers=headers)
+        else:
+            return web.Response(text=f'{{"ok":false,"error":"{result}"}}',
+                                status=500, headers=headers)
     except Exception as e:
         return web.Response(text=f'{{"ok":false,"error":"{str(e)}"}}',
                             status=500, headers=headers)
