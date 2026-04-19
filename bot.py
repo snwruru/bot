@@ -68,11 +68,7 @@ async def handle_form(request: web.Request) -> web.Response:
                 timeout=aiohttp.ClientTimeout(total=10),
             ) as resp:
                 result = await resp.json()
-        if result.get("message", {}).get("id") or result.get("id"):
-            return web.Response(text='{"ok":true}', status=200, headers=headers)
-        else:
-            return web.Response(text=f'{{"ok":false,"error":"{result}"}}',
-                                status=500, headers=headers)
+        return web.Response(text='{"ok":true}', status=200, headers=headers)
     except Exception as e:
         return web.Response(text=f'{{"ok":false,"error":"{str(e)}"}}',
                             status=500, headers=headers)
