@@ -80,7 +80,7 @@ async def start_http_server():
     app.router.add_route("POST",    "/form", handle_form)
     runner = web.AppRunner(app)
     await runner.setup()
-    site = web.TCPSite(runner, "0.0.0.0", 80)
+    site = web.TCPSite(runner, "0.0.0.0", 8080)
     await site.start()
     print("HTTP сервер запущен на порту 8080")
 
