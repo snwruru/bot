@@ -475,9 +475,19 @@ async def message_handler(message: aiomax.Message):
 
 
 
-
 if __name__ == "__main__":
-    loop = asyncio.new_event_loop()
-    asyncio.set_event_loop(loop)
-    loop.run_until_complete(start_http_server())
+    import threading
+
+    def run_http():
+        loop = asyncio.new_event_loop()
+        asyncio.set_event_loop(loop)
+        loop.run_until_complete(start_http_server())
+        loop.run_forever()
+
+    t = threading.Thread(target=run_http, daemon=True)
+    t.start()
+
+    import time
+    time.sleep(1)  # Даём серверу секунду на старт
+
     bot.run()
